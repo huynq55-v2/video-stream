@@ -1,35 +1,29 @@
 import { google } from 'googleapis';
-
-const SCOPES = ['https://www.googleapis.com/auth/drive.readonly'];
+import { getConfig } from '@/lib/config';
 
 export async function getDriveClient() {
-    const clientEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-    const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+    const config = getConfig();
+    // Priority: Config file > Env var
+    const apiKey = config.googleApiKey || process.env.GOOGLE_API_KEY;
 
-    if (!clientEmail || !privateKey) {
-        throw new Error('Missing Google Drive credentials');
+    if (!apiKey) {
+        throw new Error('Missing GOOGLE_API_KEY in config or env');
     }
 
-    const auth = new google.auth.GoogleAuth({
-        credentials: {
-            client_email: clientEmail,
-            private_key: privateKey,
-        },
-        scopes: SCOPES,
-    });
-
-    return google.drive({ version: 'v3', auth });
+    return google.drive({ version: 'v3', auth: apiKey });
 }
 
 export async function getDriveVideos() {
-    const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+    const config = getConfig();
+    const folderId = config.googleDriveFolderId || process.env.GOOGLE_DRIVE_FOLDER_ID;
+
     if (!folderId) return [];
 
     try {
         const drive = await getDriveClient();
         const response = await drive.files.list({
             q: `'${folderId}' in parents and mimeType contains 'video/' and trashed = false`,
-            fields: 'files(id, name, mimeType, size, webContentLink)',
+            fields: 'files(id, name, mimeType, size)',
             orderBy: 'name',
         });
 
