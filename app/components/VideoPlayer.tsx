@@ -9,12 +9,28 @@ interface VideoPlayerProps {
 }
 
 export default function VideoPlayer({ videoId, videoName, videoType }: VideoPlayerProps) {
-    const [apiKey, setApiKey] = React.useState('');
+    const [apiKey, setApiKey] = React.useState<string | null>(null);
+    const [loading, setLoading] = React.useState(true);
 
     React.useEffect(() => {
         const key = localStorage.getItem('googleApiKey');
         if (key) setApiKey(key);
+        setLoading(false);
     }, []);
+
+    if (loading) {
+        return <div className="w-full max-w-6xl mx-auto aspect-video bg-gray-900 flex items-center justify-center text-white">Loading player...</div>;
+    }
+
+    // For Drive videos, we need the API key. If it's missing, show an error.
+    if (videoType === 'drive' && !apiKey) {
+        return (
+            <div className="w-full max-w-6xl mx-auto aspect-video bg-gray-900 flex items-center justify-center text-white flex-col gap-4">
+                <p className="text-xl">⚠️ API Key Missing</p>
+                <p className="text-gray-400">Please configure your Google API Key in Settings.</p>
+            </div>
+        );
+    }
 
     const videoSrc = `/api/stream?id=${encodeURIComponent(videoId)}&type=${videoType}${videoType === 'drive' ? `&apiKey=${apiKey}` : ''}`;
 

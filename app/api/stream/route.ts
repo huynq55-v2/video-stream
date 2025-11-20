@@ -40,6 +40,14 @@ export async function GET(request: NextRequest) {
         const fileSize = stat.size;
         const range = request.headers.get('range');
 
+        // Determine MIME type based on extension
+        const ext = filename.split('.').pop()?.toLowerCase();
+        let mimeType = 'video/mp4';
+        if (ext === 'mkv') mimeType = 'video/x-matroska';
+        else if (ext === 'webm') mimeType = 'video/webm';
+        else if (ext === 'mov') mimeType = 'video/quicktime';
+        else if (ext === 'avi') mimeType = 'video/x-msvideo';
+
         if (range) {
             const parts = range.replace(/bytes=/, "").split("-");
             const start = parseInt(parts[0], 10);
@@ -51,7 +59,7 @@ export async function GET(request: NextRequest) {
                 'Content-Range': `bytes ${start}-${end}/${fileSize}`,
                 'Accept-Ranges': 'bytes',
                 'Content-Length': chunksize.toString(),
-                'Content-Type': 'video/mp4',
+                'Content-Type': mimeType,
             };
 
             // @ts-expect-error: Next.js Response supports Node.js streams
@@ -59,7 +67,7 @@ export async function GET(request: NextRequest) {
         } else {
             const headers = {
                 'Content-Length': fileSize.toString(),
-                'Content-Type': 'video/mp4',
+                'Content-Type': mimeType,
             };
             const file = fs.createReadStream(getVideoPath(filename));
             // @ts-expect-error: Next.js Response supports Node.js streams
