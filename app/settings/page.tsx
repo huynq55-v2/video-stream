@@ -11,17 +11,12 @@ export default function SettingsPage() {
     const [message, setMessage] = useState('');
 
     useEffect(() => {
-        fetch('/api/config')
-            .then(res => res.json())
-            .then(data => {
-                setApiKey(data.googleApiKey || '');
-                setFolderId(data.googleDriveFolderId || '');
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error('Failed to load config', err);
-                setLoading(false);
-            });
+        const storedApiKey = localStorage.getItem('googleApiKey');
+        const storedFolderId = localStorage.getItem('googleDriveFolderId');
+
+        if (storedApiKey) setApiKey(storedApiKey);
+        if (storedFolderId) setFolderId(storedFolderId);
+        setLoading(false);
     }, []);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -30,21 +25,15 @@ export default function SettingsPage() {
         setMessage('');
 
         try {
-            const res = await fetch('/api/config', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    googleApiKey: apiKey,
-                    googleDriveFolderId: folderId,
-                }),
-            });
+            localStorage.setItem('googleApiKey', apiKey);
+            localStorage.setItem('googleDriveFolderId', folderId);
 
-            if (res.ok) {
-                setMessage('✅ Settings saved successfully!');
-            } else {
-                setMessage('⚠️ Could not save to file (Read-Only System?).\nIf you are on Vercel, please set Environment Variables in your Dashboard:\n- GOOGLE_API_KEY\n- GOOGLE_DRIVE_FOLDER_ID');
-            }
+            // Simulate a short delay for better UX
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            setMessage('✅ Settings saved to browser storage!');
         } catch (error) {
+            console.error(error);
             setMessage('❌ Error saving settings.');
         } finally {
             setSaving(false);

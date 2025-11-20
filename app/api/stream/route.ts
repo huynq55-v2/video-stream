@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import fs from 'fs';
 import { getVideoPath, getVideoStat } from '@/lib/local';
-import { getConfig } from '@/lib/config';
 
 export async function GET(request: NextRequest) {
     const searchParams = request.nextUrl.searchParams;
@@ -14,11 +13,10 @@ export async function GET(request: NextRequest) {
 
     if (type === 'drive') {
         try {
-            const config = getConfig();
-            const apiKey = config.googleApiKey || process.env.GOOGLE_API_KEY;
+            const apiKey = searchParams.get('apiKey');
 
             if (!apiKey) {
-                return new NextResponse('Missing API Key', { status: 500 });
+                return new NextResponse('Missing API Key', { status: 400 });
             }
 
             // Direct streaming URL from Google Drive API

@@ -9,7 +9,14 @@ interface VideoPlayerProps {
 }
 
 export default function VideoPlayer({ videoId, videoName, videoType }: VideoPlayerProps) {
-    const videoSrc = `/api/stream?id=${encodeURIComponent(videoId)}&type=${videoType}`;
+    const [apiKey, setApiKey] = React.useState('');
+
+    React.useEffect(() => {
+        const key = localStorage.getItem('googleApiKey');
+        if (key) setApiKey(key);
+    }, []);
+
+    const videoSrc = `/api/stream?id=${encodeURIComponent(videoId)}&type=${videoType}${videoType === 'drive' ? `&apiKey=${apiKey}` : ''}`;
 
     return (
         <div className="w-full max-w-6xl mx-auto">

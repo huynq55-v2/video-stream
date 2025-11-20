@@ -1,26 +1,18 @@
 import { google } from 'googleapis';
-import { getConfig } from '@/lib/config';
 
-export async function getDriveClient() {
-    const config = getConfig();
-    // Priority: Config file > Env var
-    const apiKey = config.googleApiKey || process.env.GOOGLE_API_KEY;
-
+export async function getDriveClient(apiKey: string) {
     if (!apiKey) {
-        throw new Error('Missing GOOGLE_API_KEY in config or env');
+        throw new Error('Missing GOOGLE_API_KEY');
     }
 
     return google.drive({ version: 'v3', auth: apiKey });
 }
 
-export async function getDriveVideos() {
-    const config = getConfig();
-    const folderId = config.googleDriveFolderId || process.env.GOOGLE_DRIVE_FOLDER_ID;
-
-    if (!folderId) return [];
+export async function getDriveVideos(apiKey: string, folderId: string) {
+    if (!folderId || !apiKey) return [];
 
     try {
-        const drive = await getDriveClient();
+        const drive = await getDriveClient(apiKey);
         const response = await drive.files.list({
             q: `'${folderId}' in parents and mimeType contains 'video/' and trashed = false`,
             fields: 'files(id, name, mimeType, size)',
@@ -34,8 +26,8 @@ export async function getDriveVideos() {
     }
 }
 
-export async function getDriveVideoStream(fileId: string, range?: string) {
-    const drive = await getDriveClient();
+export async function getDriveVideoStream(fileId: string, apiKey: string, range?: string) {
+    const drive = await getDriveClient(apiKey);
 
     const headers: any = {
         alt: 'media',
