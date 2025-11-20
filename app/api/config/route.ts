@@ -3,10 +3,17 @@ import { getConfig, saveConfig } from '@/lib/config';
 
 export async function GET() {
     const config = getConfig();
+
+    // Merge with environment variables
+    const effectiveConfig = {
+        googleApiKey: config.googleApiKey || process.env.GOOGLE_API_KEY || '',
+        googleDriveFolderId: config.googleDriveFolderId || process.env.GOOGLE_DRIVE_FOLDER_ID || '',
+    };
+
     // Mask API Key for security when sending to frontend
     const maskedConfig = {
-        ...config,
-        googleApiKey: config.googleApiKey ? '********' : '',
+        ...effectiveConfig,
+        googleApiKey: effectiveConfig.googleApiKey ? '********' : '',
     };
     return NextResponse.json(maskedConfig);
 }
