@@ -14,14 +14,19 @@ export default function VideoList() {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const apiKey = localStorage.getItem('googleApiKey');
-        const folderId = localStorage.getItem('googleDriveFolderId');
+        // Read credentials from localStorage
+        const googleApiKey = localStorage.getItem('googleApiKey') || '';
+        const googleDriveFolderId = localStorage.getItem('googleDriveFolderId') || '';
 
-        const headers: HeadersInit = {};
-        if (apiKey) headers['x-google-api-key'] = apiKey;
-        if (folderId) headers['x-google-drive-folder-id'] = folderId;
-
-        fetch('/api/videos', { headers })
+        // Send credentials to API via POST
+        fetch('/api/videos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                googleApiKey,
+                googleDriveFolderId,
+            }),
+        })
             .then((res) => res.json())
             .then((data) => {
                 setVideos(data.videos);

@@ -1,20 +1,26 @@
 import { google } from 'googleapis';
 
-export async function getDriveClient(apiKey: string) {
-    if (!apiKey) {
+export async function getDriveClient(apiKey?: string) {
+    // Priority: Parameter > Env var
+    const key = apiKey || process.env.GOOGLE_API_KEY;
+
+    if (!key) {
         throw new Error('Missing GOOGLE_API_KEY');
     }
 
-    return google.drive({ version: 'v3', auth: apiKey });
+    return google.drive({ version: 'v3', auth: key });
 }
 
-export async function getDriveVideos(apiKey: string, folderId: string) {
-    if (!folderId || !apiKey) return [];
+export async function getDriveVideos(apiKey?: string, folderId?: string) {
+    // Priority: Parameter > Env var
+    const folderIdToUse = folderId || process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+    if (!folderIdToUse) return [];
 
     try {
         const drive = await getDriveClient(apiKey);
         const response = await drive.files.list({
-            q: `'${folderId}' in parents and mimeType contains 'video/' and trashed = false`,
+            q: `'${folderIdToUse}' in parents and mimeType contains 'video/' and trashed = false`,
             fields: 'files(id, name, mimeType, size)',
             orderBy: 'name',
         });
@@ -26,19 +32,19 @@ export async function getDriveVideos(apiKey: string, folderId: string) {
     }
 }
 
-export async function getDriveVideoStream(fileId: string, apiKey: string, range?: string) {
-    const drive = await getDriveClient(apiKey);
+// export async function getDriveVideoStream(fileId: string, range?: string) {
+//     const drive = await getDriveClient();
 
-    const headers: any = {
-        alt: 'media',
-    };
+//     const headers: any = {
+//         alt: 'media',
+//     };
 
-    if (range) {
-        headers.Range = range;
-    }
+//     if (range) {
+//         headers.Range = range;
+//     }
 
-    return await drive.files.get(
-        { fileId, alt: 'media' },
-        { responseType: 'stream', headers }
-    );
-}
+//     return await drive.files.get(
+//         { fileId, alt: 'media' },
+//         { responseType: 'stream', headers }
+//     );
+// }

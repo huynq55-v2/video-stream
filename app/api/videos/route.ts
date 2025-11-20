@@ -2,29 +2,36 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getLocalVideos } from '@/lib/local';
 import { getDriveVideos } from '@/lib/drive';
 
-export async function GET(request: NextRequest) {
-    const localVideos = getLocalVideos().map(name => ({
-        id: name,
-        name: name,
-        type: 'local'
-    }));
+export async function POST(request: NextRequest) {
+    try {
+        const body = await request.json();
+        const { googleApiKey, googleDriveFolderId } = body;
 
-    const apiKey = request.headers.get('x-google-api-key');
-    const folderId = request.headers.get('x-google-drive-folder-id');
+        const localVideos = getLocalVideos().map(name => ({
+            id: name,
+            name: name,
+            type: 'local'
+        }));
 
-    let driveVideos: any[] = [];
-    if (apiKey && folderId) {
-        try {
-            const driveFiles = await getDriveVideos(apiKey, folderId);
-            driveVideos = driveFiles.map((file: any) => ({
-                id: file.id,
-                name: file.name,
-                type: 'drive'
-            }));
-        } catch (error) {
-            console.error('Failed to fetch drive videos', error);
+        let driveVideos: any[] = [];
+
+        // Only fetch Drive videos if credentials are provided
+        if (googleApiKey && googleDriveFolderId) {
+            try {
+                const driveFiles = await getDriveVideos(googleApiKey, googleDriveFolderId);
+                driveVideos = driveFiles.map((file: any) => ({
+                    id: file.id,
+                    name: file.name,
+                    type: 'drive'
+                }));
+            } catch (error) {
+                console.error('Failed to fetch drive videos', error);
+            }
         }
-    }
 
-    return NextResponse.json({ videos: [...localVideos, ...driveVideos] });
+        return NextResponse.json({ videos: [...localVideos, ...driveVideos] });
+    } catch (error) {
+        console.error('Error processing request:', error);
+        return NextResponse.json({ videos: [] });
+    }
 }

@@ -3,6 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+const STORAGE_KEYS = {
+    API_KEY: 'googleApiKey',
+    FOLDER_ID: 'googleDriveFolderId',
+};
+
 export default function SettingsPage() {
     const [apiKey, setApiKey] = useState('');
     const [folderId, setFolderId] = useState('');
@@ -11,11 +16,12 @@ export default function SettingsPage() {
     const [message, setMessage] = useState('');
 
     useEffect(() => {
-        const storedApiKey = localStorage.getItem('googleApiKey');
-        const storedFolderId = localStorage.getItem('googleDriveFolderId');
+        // Load credentials from localStorage
+        const savedApiKey = localStorage.getItem(STORAGE_KEYS.API_KEY) || '';
+        const savedFolderId = localStorage.getItem(STORAGE_KEYS.FOLDER_ID) || '';
 
-        if (storedApiKey) setApiKey(storedApiKey);
-        if (storedFolderId) setFolderId(storedFolderId);
+        setApiKey(savedApiKey);
+        setFolderId(savedFolderId);
         setLoading(false);
     }, []);
 
@@ -25,15 +31,13 @@ export default function SettingsPage() {
         setMessage('');
 
         try {
-            localStorage.setItem('googleApiKey', apiKey);
-            localStorage.setItem('googleDriveFolderId', folderId);
+            // Save to localStorage
+            localStorage.setItem(STORAGE_KEYS.API_KEY, apiKey);
+            localStorage.setItem(STORAGE_KEYS.FOLDER_ID, folderId);
 
-            // Simulate a short delay for better UX
-            await new Promise(resolve => setTimeout(resolve, 500));
-
-            setMessage('✅ Settings saved to browser storage!');
+            setMessage('✅ Settings saved successfully!');
         } catch (error) {
-            console.error(error);
+            console.error('Error saving settings:', error);
             setMessage('❌ Error saving settings.');
         } finally {
             setSaving(false);
@@ -62,7 +66,7 @@ export default function SettingsPage() {
                             placeholder="AIzaSy..."
                             className="w-full bg-gray-800 border border-gray-700 rounded p-3 text-white focus:ring-2 focus:ring-red-600 outline-none"
                         />
-                        <p className="text-xs text-gray-500 mt-1">Leave blank to keep current key (if masked).</p>
+                        <p className="text-xs text-gray-500 mt-1">Your API key is stored locally in your browser.</p>
                     </div>
 
                     <div>
@@ -77,7 +81,7 @@ export default function SettingsPage() {
                     </div>
 
                     {message && (
-                        <div className={`p-3 rounded whitespace-pre-wrap ${message.includes('✅') ? 'bg-green-900/50 text-green-200' : 'bg-yellow-900/50 text-yellow-200'}`}>
+                        <div className={`p-3 rounded ${message.includes('✅') ? 'bg-green-900/50 text-green-200' : 'bg-red-900/50 text-red-200'}`}>
                             {message}
                         </div>
                     )}
