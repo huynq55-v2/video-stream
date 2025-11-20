@@ -42,7 +42,7 @@ export default function SettingsPage() {
             if (res.ok) {
                 setMessage('✅ Settings saved successfully!');
             } else {
-                setMessage('❌ Failed to save settings.');
+                setMessage('⚠️ Could not save to file (Read-Only System?).\nIf you are on Vercel, please set Environment Variables in your Dashboard:\n- GOOGLE_API_KEY\n- GOOGLE_DRIVE_FOLDER_ID');
             }
         } catch (error) {
             setMessage('❌ Error saving settings.');
